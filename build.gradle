@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'com.google.protobuf' version '0.9.4'
+}
+
+group = 'org.vimalkeshu'
+version = '1.0-SNAPSHOT'
+description = 'copy data from one storage to another in distributed manner.'
+
+java {
+    sourceCompatibility = '8'
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext.versions = [
+        grpc :'1.68.0',
+        protobufJava: '4.28.2',
+        slf4j: '2.0.16',
+        junitBom: '5.10.0'
+]
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    configureEach {
+//        exclude()
+    }
+}
+
+dependencies {
+    implementation(group: 'io.grpc', name:'grpc-netty-shaded', version: versions.grpc)
+    implementation(group: 'io.grpc', name:'grpc-protobuf', version: versions.grpc)
+    implementation(group: 'io.grpc', name:'grpc-stub', version: versions.grpc)
+
+    // For protobuf serialization
+    implementation(group: 'com.google.protobuf', name:'protobuf-java', version: versions.protobufJava)
+
+    // Logging
+    implementation(group:'org.slf4j', name: 'slf4j-api', version: versions.slf4j)
+    implementation(group:'org.slf4j', name: 'slf4j-simple', version: versions.slf4j)
+
+    testImplementation platform(group:'org.junit', name:'junit-bom', version: versions.junitBom)
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
