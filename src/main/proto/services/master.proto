@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.vimalkeshu.replication.common.grpc.services";
+option java_outer_classname = "MasterProto";
+
+package master.service;
+
+import "messages/common_message.proto";
+
+service Master {
+  rpc WorkerRegistration (common.message.WorkerInfo) returns (common.message.Empty) {}
+  rpc TaskStatusUpdate (common.message.TaskInfo) returns (common.message.Empty) {}
+  rpc SubmitJob (common.message.Job) returns (common.message.JobStatusInfo) {}
+  rpc JobStatus (common.message.JobIdInfo) returns (common.message.JobStatusInfo) {}
+}

@@ -1,6 +1,8 @@
 plugins {
     id 'java'
     id 'com.google.protobuf' version '0.9.4'
+//    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'application'
 }
 
 group = 'org.vimalkeshu'
@@ -15,11 +17,13 @@ repositories {
     mavenCentral()
 }
 
-ext.versions = [
+ext.versions =  [
         grpc :'1.68.0',
         protobufJava: '4.28.2',
-        slf4j: '2.0.16',
-        junitBom: '5.10.0'
+        junitBom: '5.10.0',
+        log4j: '2.20.0',
+        guava: '31.0.1-jre',
+        lombok: '1.18.30'
 ]
 
 configurations {
@@ -40,13 +44,82 @@ dependencies {
     implementation(group: 'com.google.protobuf', name:'protobuf-java', version: versions.protobufJava)
 
     // Logging
-    implementation(group:'org.slf4j', name: 'slf4j-api', version: versions.slf4j)
-    implementation(group:'org.slf4j', name: 'slf4j-simple', version: versions.slf4j)
+    implementation(group:'org.apache.logging.log4j', name: 'log4j-api', version: versions.log4j)
+    implementation(group:'org.apache.logging.log4j', name: 'log4j-core', version: versions.log4j)
+
+    compileOnly(group: 'org.projectlombok', name: 'lombok', version: versions.lombok)
+    annotationProcessor(group: 'org.projectlombok', name: 'lombok', version: versions.lombok)
 
     testImplementation platform(group:'org.junit', name:'junit-bom', version: versions.junitBom)
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
-test {
+tasks.named('test') {
+    testLogging {
+        events "PASSED", "STARTED", "FAILED", "SKIPPED"
+    }
+
     useJUnitPlatform()
+}
+
+// Register a task "unitTest" that executes only the unit tests:
+tasks.register("unitTest", Test) {
+    testLogging {
+        events "PASSED", "STARTED", "FAILED", "SKIPPED"
+    }
+
+    filter {
+        excludeTestsMatching "*IntegrationTest"
+    }
+
+    useJUnitPlatform()
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${versions.protobufJava}"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${versions.grpc}"
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {}
+            }
+            task.plugins {
+                grpc {}
+            }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDir 'src/main/proto/messages'
+            srcDir 'src/main/proto/services'
+        }
+        java {
+            srcDirs 'build/generated/source/proto/main/java',
+                    'build/generated/source/proto/main/grpc'
+        }
+    }
+}
+
+application {
+    // Define the main class for running the server or client
+    // We'll specify different main classes when running
+}
+
+task runServer(type: JavaExec) {
+    main = 'org.vimalkeshu.replication.master.MasterMain'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task runClient(type: JavaExec) {
+    main = 'org.vimalkeshu.replication.worker.WorkerMain'
+    classpath = sourceSets.main.runtimeClasspath
 }

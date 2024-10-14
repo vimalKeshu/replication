@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.vimalkeshu.replication.common.grpc.services";
+option java_outer_classname = "WorkerProto";
+
+package master.service;
+
+import "messages/common_message.proto";
+
+service Worker {
+  rpc TaskAssignment (common.message.TaskInfo) returns (common.message.Empty) {}
+}
