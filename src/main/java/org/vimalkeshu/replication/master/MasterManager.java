@@ -82,10 +82,11 @@ public class MasterManager {
 
     public JobStatusInfo updateJobStatus(JobIdInfo jobIdInfo) {
         JobStatus j1 = JobStatus.running;
-        if (!this.jobTracker.containsKey(jobIdInfo.getJobId())) j1 = JobStatus.unknown;
-        else if (this.jobTracker.get(jobIdInfo.getJobId()).getJobStatus() == JobStatus.failed) j1 = JobStatus.failed;
+        Job job = this.jobTracker.getOrDefault(jobIdInfo.getJobId(), null);
+
+        if (job == null) j1 = JobStatus.unknown;
+        else if (job.getJobStatus() == JobStatus.failed) j1 = JobStatus.failed;
         else {
-            Job job = this.jobTracker.get(jobIdInfo.getJobId());
             int successCount = 0;
             int failedCount = 0;
 
@@ -97,9 +98,9 @@ public class MasterManager {
                 else if (t1.getStatus() == TaskStatus.COMPLETED) successCount++;
             }
 
-            if (successCount == job.getTasksCount()) {
-                j1 = JobStatus.completed;
-            } else if(failedCount == job.getTasksCount()) j1 = JobStatus.failed;
+            if (successCount == job.getTasksCount()) j1 = JobStatus.completed;
+            else if (failedCount == job.getTasksCount()) j1 = JobStatus.failed;
+            else if ((failedCount + successCount) == job.getTasksCount()) j1 = JobStatus.failed;
 
             // remove job if it has processed all tasks (completed or failed).
             if (j1 == JobStatus.completed || j1 == JobStatus.failed) {
