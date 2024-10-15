@@ -64,7 +64,16 @@ public class MasterService {
         }
 
         public void submitJob(Job job, StreamObserver<JobStatusInfo> responseObserver) {
-
+            JobStatusInfo jobStatusInfo = manager.submitJob(job);
+            responseObserver.onNext(jobStatusInfo);
+            responseObserver.onCompleted();
         }
+
+        public void jobStatus(JobIdInfo jobIdInfo, StreamObserver<JobStatusInfo> responseObserver) {
+            JobStatusInfo jobStatusInfo = manager.getJobStatus(jobIdInfo);
+            responseObserver.onNext(jobStatusInfo);
+            responseObserver.onCompleted();
+        }
+
     }
 }

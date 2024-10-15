@@ -12,6 +12,7 @@ public class TaskDistributorWorker implements Runnable {
     private final MasterManager manager;
     @Setter
     private volatile boolean stop;
+    private final int workerParallelism = 100;
 
     public TaskDistributorWorker(MasterManager manager) {
         this.manager = manager;
@@ -24,10 +25,12 @@ public class TaskDistributorWorker implements Runnable {
             if (!this.manager.getWorkers().isEmpty()) {
                 try {
                     for (Map.Entry<String, WorkerGrpc.WorkerBlockingStub> worker: manager.getWorkers().entrySet()) {
-                        if (!manager.getTaskInfoQueue().isEmpty()) {
+                        int cnt = 0;
+                        while (!manager.getTaskInfoQueue().isEmpty() && cnt < workerParallelism) {
                             TaskInfo taskInfo = manager.getTaskInfoQueue().poll();
                             worker.getValue().taskAssignment(taskInfo);
                             System.out.println("Task: "+taskInfo +", assigned to worker: "+ worker.getKey());
+                            cnt++;
                         }
                         if (stop) break;
                     }

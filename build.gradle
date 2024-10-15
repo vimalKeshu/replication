@@ -114,12 +114,17 @@ application {
     // We'll specify different main classes when running
 }
 
-task runServer(type: JavaExec) {
+task runMain(type: JavaExec) {
     main = 'org.vimalkeshu.replication.master.MasterMain'
     classpath = sourceSets.main.runtimeClasspath
 }
 
-task runClient(type: JavaExec) {
+task runWorker(type: JavaExec) {
     main = 'org.vimalkeshu.replication.worker.WorkerMain'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task runDummy(type: JavaExec) {
+    main = 'org.vimalkeshu.replication.dummy.DummyMain'
     classpath = sourceSets.main.runtimeClasspath
 }
