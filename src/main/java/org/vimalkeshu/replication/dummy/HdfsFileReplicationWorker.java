@@ -1,9 +1,10 @@
-package org.vimalkeshu.replication.worker;
+package org.vimalkeshu.replication.dummy;
 
 import lombok.Getter;
-import org.vimalkeshu.replication.common.grpc.messages.TaskInfo;
-import org.vimalkeshu.replication.common.grpc.messages.TaskStatus;
-import org.vimalkeshu.replication.common.grpc.services.MasterGrpc;
+import org.vimalkeshu.replication.grpc.messages.Task;
+import org.vimalkeshu.replication.grpc.messages.TaskInfo;
+import org.vimalkeshu.replication.grpc.messages.TaskStatus;
+import org.vimalkeshu.replication.grpc.services.MasterGrpc;
 
 import java.util.Objects;
 
@@ -32,7 +33,7 @@ public class HdfsFileReplicationWorker implements Runnable {
             boolean isSucceeded = false;
             while (count < this.retry && !isSucceeded) {
                 try {
-                    System.out.println("Finished the task: "+ taskInfo.toString() + " by worker: "+ workerId);
+                    System.out.println("Finished the task: "+ taskInfo.getTask().getTaskId() + " by worker: "+ workerId);
                     isSucceeded = true;
                     this.status = TaskStatus.COMPLETED;
                 } catch (Exception ex) {
@@ -46,12 +47,24 @@ public class HdfsFileReplicationWorker implements Runnable {
         }
 
         // update task status to master.
-        if (this.status != TaskStatus.COMPLETED) {
-            this.masterClient.taskStatusUpdate(TaskInfo.newBuilder(taskInfo).setStatus(TaskStatus.FAILED).build());
-            System.out.println("Replication failed for task: "+this.taskInfo.toString());
-        } else {
-            this.masterClient.taskStatusUpdate(TaskInfo.newBuilder(taskInfo).setStatus(TaskStatus.COMPLETED).build());
-            System.out.println("Replication completed for task: "+ this.taskInfo);
+        try{
+            TaskInfo t1 = null;
+            if (this.status != TaskStatus.COMPLETED) {
+                t1 = TaskInfo
+                        .newBuilder(taskInfo)
+                        .setTask(Task.newBuilder(taskInfo.getTask()).setStatus(TaskStatus.FAILED).build())
+                        .build();
+                System.out.println("Replication failed for task: "+t1);
+            } else {
+                t1 = TaskInfo
+                        .newBuilder(taskInfo)
+                        .setTask(Task.newBuilder(taskInfo.getTask()).setStatus(TaskStatus.COMPLETED).build())
+                        .build();
+                System.out.println("Replication completed for task: "+ t1);
+            }
+            this.masterClient.taskStatusUpdate(t1);
+        } catch (Exception ex){
+            ex.printStackTrace();
         }
     }
 

@@ -2,8 +2,8 @@ package org.vimalkeshu.replication.master;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.vimalkeshu.replication.common.grpc.messages.TaskInfo;
-import org.vimalkeshu.replication.common.grpc.services.WorkerGrpc;
+import org.vimalkeshu.replication.grpc.messages.TaskInfo;
+import org.vimalkeshu.replication.grpc.services.WorkerGrpc;
 
 import java.util.Map;
 
@@ -29,7 +29,7 @@ public class TaskDistributorWorker implements Runnable {
                         while (!manager.getTaskInfoQueue().isEmpty() && cnt < workerParallelism) {
                             TaskInfo taskInfo = manager.getTaskInfoQueue().poll();
                             worker.getValue().taskAssignment(taskInfo);
-                            System.out.println("Task: "+taskInfo +", assigned to worker: "+ worker.getKey());
+                            //System.out.println("Task: "+taskInfo +", assigned to worker: "+ worker.getKey());
                             cnt++;
                         }
                         if (stop) break;

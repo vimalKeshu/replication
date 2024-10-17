@@ -2,8 +2,8 @@ package org.vimalkeshu.replication.master;
 
 import io.grpc.ManagedChannelBuilder;
 import lombok.Getter;
-import org.vimalkeshu.replication.common.grpc.messages.*;
-import org.vimalkeshu.replication.common.grpc.services.WorkerGrpc;
+import org.vimalkeshu.replication.grpc.messages.*;
+import org.vimalkeshu.replication.grpc.services.WorkerGrpc;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,12 +34,12 @@ public class MasterManager {
     public void updateTaskStatus(TaskInfo taskInfo) {
         if (taskTracker.containsKey(taskInfo.getJobId())
                 && taskTracker.get(taskInfo.getJobId()).containsKey(taskInfo.getTask().getTaskId())) {
-            if (taskInfo.getStatus() == TaskStatus.FAILED
+            if (taskInfo.getTask().getStatus() == TaskStatus.FAILED
                     && taskInfo.getAttempt() < this.totalRetry) {
                 this.getTaskInfoQueue()
                         .add(TaskInfo
                                 .newBuilder(taskInfo)
-                                .setStatus(TaskStatus.PENDING)
+                                .setTask(Task.newBuilder(taskInfo.getTask()).setStatus(TaskStatus.PENDING).build())
                                 .setAttempt(taskInfo.getAttempt() + 1)
                                 .build());
             } else {
@@ -57,14 +57,13 @@ public class MasterManager {
             TaskInfo taskInfo = TaskInfo
                     .newBuilder()
                     .setJobId(jobId)
-                    .setTask(task)
-                    .setStatus(TaskStatus.PENDING)
+                    .setTask(Task.newBuilder(task).setStatus(TaskStatus.PENDING).build())
                     .setAttempt(1)
                     .build();
 
             this.taskTracker
                     .get(jobId)
-                    .put(task.getTaskId(), taskInfo);
+                    .put(taskInfo.getTask().getTaskId(), taskInfo);
 
             this.taskInfoQueue.add(taskInfo);
         }
@@ -85,17 +84,19 @@ public class MasterManager {
         Job job = this.jobTracker.getOrDefault(jobIdInfo.getJobId(), null);
 
         if (job == null) j1 = JobStatus.unknown;
-        else if (job.getJobStatus() == JobStatus.failed) j1 = JobStatus.failed;
+        else if (job.getJobStatus() == JobStatus.completed
+                || job.getJobStatus() == JobStatus.failed)
+            j1 = job.getJobStatus();
         else {
             int successCount = 0;
             int failedCount = 0;
 
             for (Task task: job.getTasksList()) {
                 TaskInfo t1 = this.taskTracker.get(jobIdInfo.getJobId()).getOrDefault(task.getTaskId(), null);
-                if (t1 == null) throw new RuntimeException("Task, "+task+", is missing from the record !!!");
+                if (t1 == null) throw new RuntimeException("Task is missing !!! "+task);
 
-                if (t1.getStatus() == TaskStatus.FAILED && t1.getAttempt() >= this.totalRetry) failedCount++;
-                else if (t1.getStatus() == TaskStatus.COMPLETED) successCount++;
+                if (t1.getTask().getStatus() == TaskStatus.FAILED && t1.getAttempt() >= this.totalRetry) failedCount++;
+                else if (t1.getTask().getStatus() == TaskStatus.COMPLETED) successCount++;
             }
 
             if (successCount == job.getTasksCount()) j1 = JobStatus.completed;
@@ -104,8 +105,7 @@ public class MasterManager {
 
             // remove job if it has processed all tasks (completed or failed).
             if (j1 == JobStatus.completed || j1 == JobStatus.failed) {
-                this.jobTracker.put(jobIdInfo.getJobId(),
-                        Job.newBuilder(job).setJobStatus(j1).build());
+                this.jobTracker.put(jobIdInfo.getJobId(), Job.newBuilder(job).setJobStatus(j1).build());
                 this.taskTracker.remove(jobIdInfo.getJobId());
             }
         }

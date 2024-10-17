@@ -18,12 +18,22 @@ repositories {
 }
 
 ext.versions =  [
-        grpc :'1.68.0',
-        protobufJava: '4.28.2',
-        junitBom: '5.10.0',
-        log4j: '2.20.0',
-        guava: '31.0.1-jre',
-        lombok: '1.18.30'
+        grpc                  :'1.68.0',
+        protobufJava          : '4.28.2',
+        junitBom              : '5.10.0',
+        log4j                 : '2.20.0',
+        self4j                : '1.7.30',
+        guava                 : '31.0.1-jre',
+        lombok                : '1.18.30',
+        hadoop                : '3.3.1',
+        hadoopAws             : '3.3.1',
+        hive                  : '3.1.0',
+        awsJavaSdkBundle      : '1.12.187',
+        alluxioShadedClient   : '2.8.0-2',
+        junitJupiter          : '5.8.0-M1',
+        junitPlatform         : '1.2.0',
+        gcsConnector          : 'hadoop3-2.2.4',
+        jackson               : '2.16.2'
 ]
 
 configurations {
@@ -36,6 +46,26 @@ configurations {
 }
 
 dependencies {
+    implementation(group: 'com.google.guava', name: 'guava', version: versions.guava)
+    implementation(group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: versions.jackson)
+    implementation(group: 'org.apache.hadoop', name: 'hadoop-common', version: versions.hadoop) {
+        exclude(group : "org.slf4j", module: "slf4j-log4j12")
+    }
+    implementation(group: 'org.apache.hadoop', name: 'hadoop-hdfs-client', version: versions.hadoop) {
+        exclude(group: "org.slf4j", module: "slf4j-log4j12")
+    }
+    implementation(group: 'org.apache.hadoop', name: 'hadoop-aws', version: versions.hadoopAws) {
+        exclude(group: "org.slf4j", module: "slf4j-log4j12")
+    }
+    implementation(group: 'com.amazonaws', name: 'aws-java-sdk-bundle', version: versions.awsJavaSdkBundle) {
+        exclude(group: "org.slf4j", module: "slf4j-log4j12")
+    }
+    implementation(group: 'com.google.cloud.bigdataoss', name: 'gcs-connector', version: versions.gcsConnector) {
+        exclude(group: "org.slf4j", module: "slf4j-log4j12")
+    }
+    implementation(group: 'org.apache.hadoop', name: 'hadoop-mapreduce-client-core', version: versions.hadoop) {
+        exclude(group: "org.slf4j", module: "slf4j-log4j12")
+    }
     implementation(group: 'io.grpc', name:'grpc-netty-shaded', version: versions.grpc)
     implementation(group: 'io.grpc', name:'grpc-protobuf', version: versions.grpc)
     implementation(group: 'io.grpc', name:'grpc-stub', version: versions.grpc)

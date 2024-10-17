@@ -4,11 +4,12 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import org.vimalkeshu.replication.common.JobService;
-import org.vimalkeshu.replication.common.grpc.messages.Empty;
-import org.vimalkeshu.replication.common.grpc.messages.TaskInfo;
-import org.vimalkeshu.replication.common.grpc.messages.WorkerInfo;
-import org.vimalkeshu.replication.common.grpc.services.MasterGrpc;
-import org.vimalkeshu.replication.common.grpc.services.WorkerGrpc;
+import org.vimalkeshu.replication.dummy.HdfsFileReplicationWorker;
+import org.vimalkeshu.replication.grpc.messages.Empty;
+import org.vimalkeshu.replication.grpc.messages.TaskInfo;
+import org.vimalkeshu.replication.grpc.messages.WorkerInfo;
+import org.vimalkeshu.replication.grpc.services.MasterGrpc;
+import org.vimalkeshu.replication.grpc.services.WorkerGrpc;
 
 import java.io.IOException;
 

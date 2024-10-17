@@ -2,11 +2,10 @@ package org.vimalkeshu.replication.master;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.vimalkeshu.replication.common.grpc.messages.Job;
-import org.vimalkeshu.replication.common.grpc.messages.JobIdInfo;
-import org.vimalkeshu.replication.common.grpc.messages.JobStatusInfo;
-import org.vimalkeshu.replication.common.grpc.messages.TaskInfo;
-import org.vimalkeshu.replication.common.grpc.services.WorkerGrpc;
+import org.vimalkeshu.replication.grpc.messages.Job;
+import org.vimalkeshu.replication.grpc.messages.JobIdInfo;
+import org.vimalkeshu.replication.grpc.messages.JobStatus;
+import org.vimalkeshu.replication.grpc.messages.JobStatusInfo;
 
 import java.util.Map;
 
@@ -24,21 +23,25 @@ public class JobStatusUpdaterWorker implements Runnable {
     @Override
     public void run() {
         while (!stop) {
-            try {
-                for (Map.Entry<String, Job> jobEntry: this.manager.getJobTracker().entrySet()) {
-                    System.out.println(this.manager
-                            .updateJobStatus(
-                                    JobIdInfo
-                                            .newBuilder()
-                                            .setJobId(jobEntry.getKey())
-                                            .build()));
-                    if (stop) break;
+            for (Map.Entry<String, Job> jobEntry: this.manager.getJobTracker().entrySet()) {
+                try {
+                    String jobId = jobEntry.getKey();
+                    Job job = jobEntry.getValue();
+                    if (job.getJobStatus() == JobStatus.running) {
+                        JobStatusInfo jobStatusInfo = this.manager
+                                                        .updateJobStatus(
+                                                                JobIdInfo
+                                                                        .newBuilder()
+                                                                        .setJobId(jobId)
+                                                                        .build());
+                        System.out.println("Status: jobId: "+ jobStatusInfo.getJobId() +" - "+ jobEntry.getValue().getJobStatus()) ;
+                    } else System.out.println("Status: jobId: "+ jobId +" - "+ jobEntry.getValue().getJobStatus()) ;
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-                try {Thread.sleep(5000);} catch (Exception ignored){}
-            } catch (Exception ex) {
-                ex.printStackTrace();
+                if (stop) break;
             }
-
+            try {Thread.sleep(5000);} catch (Exception ignored){}
         }
     }
 }

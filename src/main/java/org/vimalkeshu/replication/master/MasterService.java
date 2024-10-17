@@ -4,8 +4,8 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import org.vimalkeshu.replication.common.JobService;
-import org.vimalkeshu.replication.common.grpc.messages.*;
-import org.vimalkeshu.replication.common.grpc.services.MasterGrpc;
+import org.vimalkeshu.replication.grpc.messages.*;
+import org.vimalkeshu.replication.grpc.services.MasterGrpc;
 
 import java.io.IOException;
 
@@ -16,6 +16,8 @@ public class MasterService {
     private final MasterManager manager;
     private final JobService taskDistributorScheduler;
     private final TaskDistributorWorker taskDistributorWorker;
+    private final JobService jobStatusUpdaterScheduler;
+    private final JobStatusUpdaterWorker jobStatusUpdaterWorker;
 
     public MasterService(String masterHost, int masterPort) {
         this.masterHost = masterHost;
@@ -26,18 +28,23 @@ public class MasterService {
         this.manager = new MasterManager();
         this.taskDistributorScheduler = new JobService(1);
         this.taskDistributorWorker = new TaskDistributorWorker(this.manager);
+        this.jobStatusUpdaterScheduler = new JobService(1);
+        this.jobStatusUpdaterWorker = new JobStatusUpdaterWorker(this.manager);
     }
 
     public void start() throws IOException {
         server.start();
         Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
         this.taskDistributorScheduler.submit(this.taskDistributorWorker);
+        this.jobStatusUpdaterScheduler.submit(this.jobStatusUpdaterWorker);
     }
 
     public void stop() {
         if (server != null) {
             this.taskDistributorWorker.setStop(true);
             this.taskDistributorScheduler.shutDown();
+            this.jobStatusUpdaterWorker.setStop(true);
+            this.jobStatusUpdaterScheduler.shutDown();
             server.shutdown();
         }
     }

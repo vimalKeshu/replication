@@ -2,7 +2,7 @@ package org.vimalkeshu.replication.worker;
 
 import io.grpc.ManagedChannelBuilder;
 import org.vimalkeshu.replication.common.JobService;
-import org.vimalkeshu.replication.common.grpc.services.MasterGrpc;
+import org.vimalkeshu.replication.grpc.services.MasterGrpc;
 
 import java.io.IOException;
 

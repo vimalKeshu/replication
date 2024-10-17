@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "org.vimalkeshu.replication.common.grpc.messages";
+option java_package = "org.vimalkeshu.replication.grpc.messages";
 option java_outer_classname = "CommonMessageProto";
 
 package common.message;
@@ -29,14 +29,17 @@ message Task {
   string targetCatalog = 3;
   string source = 4;
   string target = 5;
-  string replicationType = 6;
+  string delta = 6;
+  string replicationType = 7;
+  TaskStatus status = 8;
+  int32 blockSize = 9;
+  int32 totalRetry = 10;
 }
 
 message TaskInfo {
   string jobId = 1;
   Task task = 2;
-  TaskStatus status = 3;
-  int32 attempt = 4;
+  int32 attempt = 3;
 }
 
 enum JobStatus {
